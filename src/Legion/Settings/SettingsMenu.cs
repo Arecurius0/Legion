@@ -20,10 +20,13 @@ namespace Legion.Main
             Settings.DrawMobs.Value = ImGuiExtension.Checkbox(Settings.DrawMobs.Value ? "Draw Reward Mobs" : "Draw Reward Mobs", Settings.DrawMobs);
             idPop++;
             ImGui.PopID();
-            Settings.DrawFancyIcons.Value = ImGuiExtension.Checkbox(Settings.DrawFancyIcons.Value ? "Detailed Loot Icons" : "Detailed Loot Icons", Settings.DrawFancyIcons);
+            Settings.DrawFancyIcons.Value = ImGuiExtension.Checkbox(Settings.DrawFancyIcons.Value ? "Detailed Loot Icons & Labels" : "Detailed Loot Icons & Labels", Settings.DrawFancyIcons);
             idPop++;
             ImGui.PopID();
             Settings.TextLabels.Value = ImGuiExtension.Checkbox(Settings.TextLabels.Value ? "Icon Text Labels" : "Icon Text Labels", Settings.TextLabels);
+            idPop++;
+            ImGui.PopID();
+            Settings.TextLabels.Value = ImGuiExtension.Checkbox(Settings.TextLabels.Value ? "Use Loot as Text Label" : "Use Loot as Text Label", Settings.TextLabels);
             idPop++;
             ImGui.PopID();
             Settings.DrawWorldIcons.Value = ImGuiExtension.Checkbox(Settings.DrawWorldIcons.Value ? "Draw Icons in World" : "Draw Icons in World", Settings.DrawWorldIcons);
@@ -56,9 +59,27 @@ namespace Legion.Main
             Settings.IconSizeHoard.Value = ImGuiExtension.IntSlider("War Hoard Icon Size", Settings.IconSizeHoard);
             idPop++;
             ImGui.PopID();
-            Settings.IconSizeGeneric.Value = ImGuiExtension.IntSlider("Generic Mobs Icon Size", Settings.IconSizeGeneric);
+            Settings.TextSize.Value = ImGuiExtension.IntSlider("Text Label Font Size", Settings.TextSize);
             idPop++;
             ImGui.PopID();
+            Settings.KaruiColor = ImGuiExtension.ColorPicker("Karui Color", Settings.KaruiColor);
+            idPop++;
+            ImGui.PopID();
+            Settings.EternalColor = ImGuiExtension.ColorPicker("Eternal Empire Color", Settings.EternalColor);
+            idPop++;
+            ImGui.PopID();
+            Settings.TemplarColor = ImGuiExtension.ColorPicker("Templar Color", Settings.TemplarColor);
+            idPop++;
+            ImGui.PopID();
+            Settings.VaalColor = ImGuiExtension.ColorPicker("Vaal Color", Settings.VaalColor);
+            idPop++;
+            ImGui.PopID();
+            Settings.MarakethColor = ImGuiExtension.ColorPicker("Maraketh Color", Settings.MarakethColor);
+            idPop++;
+            ImGui.PopID();
+
+
+
             ImGui.TreePop();
         }
 
