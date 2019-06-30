@@ -38,6 +38,12 @@ namespace Legion.Main
             Settings.DrawMobLines.Value = ImGuiExtension.Checkbox(Settings.DrawMobLines.Value ? "Draw Lines to Reward Mobs" : "Draw lines to Reward Mobs", Settings.DrawMobLines);
             idPop++;
             ImGui.PopID();
+            Settings.DrawMonolithIcon.Value = ImGuiExtension.Checkbox(Settings.DrawMobLines.Value ? "Draw Monolith Icon" : "Draw Monolith Icon", Settings.DrawMonolithIcon);
+            idPop++;
+            ImGui.PopID();
+            Settings.DrawMonolithLine.Value = ImGuiExtension.Checkbox(Settings.DrawMobLines.Value ? "Draw Line to Monolith Icon" : "Draw Line to Monolith", Settings.DrawMonolithLine);
+            idPop++;
+            ImGui.PopID();
             Settings.LineThickness.Value = ImGuiExtension.IntSlider("Line Thickness", Settings.LineThickness);
             idPop++;
             ImGui.PopID();

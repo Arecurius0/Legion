@@ -98,6 +98,18 @@ namespace Legion.Main
             }
         }
 
+
+        private Color GetColorForPath(string varPath)
+        {
+            if (varPath.Contains("karui")) return Settings.KaruiColor;
+            else if (varPath.Contains("eternal")) return Settings.EternalColor;
+            else if (varPath.Contains("templar")) return Settings.TemplarColor;
+            else if (varPath.Contains("vaal")) return Settings.VaalColor;
+            else if (varPath.Contains("maraketh")) return Settings.MarakethColor;
+            else if (varPath.Contains("legioninitiator")) return new Color(80, 30, 220);
+            else return Color.White;
+        }
+
         private void DrawToLargeMiniMap(EntityWrapper entity)
         {
             var icon = GetMapIcon(entity);
@@ -119,6 +131,7 @@ namespace Legion.Main
 
 
             DrawImageEntity(entity, icon);
+
             if (Settings.TextLabels && !entity.Path.StartsWith("Metadata/Terrain/Leagues/Legion/Objects/LegionInitiator"))
             {
                 var varPath = entity.Path.ToLower();
@@ -145,16 +158,6 @@ namespace Legion.Main
                 Graphics.DrawBox(new RectangleF((point.X - text.Width / 2f) - 3, (point.Y + size / 2f) - 1, text.Width + 5, text.Height + 2), new Color(0, 0, 0, 220));
                 Graphics.DrawFrame(new RectangleF((point.X - text.Width / 2f) - 3, (point.Y + size / 2f) - 1, text.Width + 5, text.Height + 2), 1, iconColor);
             }
-        }
-
-        private Color GetColorForPath(string varPath)
-        {
-            if (varPath.Contains("karui")) return Settings.KaruiColor;
-            else if (varPath.Contains("eternal")) return Settings.EternalColor;
-            else if (varPath.Contains("templar")) return Settings.TemplarColor;
-            else if (varPath.Contains("vaal")) return Settings.VaalColor;
-            else if (varPath.Contains("maraketh")) return Settings.MarakethColor;
-            else return Color.White;
         }
 
         private void DrawToSmallMiniMap(EntityWrapper entity)
@@ -229,7 +232,8 @@ namespace Legion.Main
             var stats = entity.GetComponent<Stats>();
 
             
-            if (Settings.DrawChestsLines && varPath.Contains("chest") || Settings.DrawChestsLines && varPath.Contains("general") || Settings.DrawMobLines && stats.StatDictionary.ContainsKey(2468))
+            if (Settings.DrawChestsLines && varPath.Contains("chest") || Settings.DrawChestsLines && varPath.Contains("general") 
+                || Settings.DrawMobLines && stats.StatDictionary.ContainsKey(2468) || Settings.DrawMonolithLine && varPath.Contains("legioninitiator"))
                 Graphics.DrawLine(playerPosition, screenPosition, Settings.LineThickness, new Color((int)iconColor.R, (int)iconColor.G, (int)iconColor.B, Settings.LineAlpha));
             if (Settings.DrawWorldIcons)
                 if (Settings.DrawChests && varPath.Contains("chest") || Settings.DrawMobs && varPath.Contains("general") || Settings.DrawMobs && stats.StatDictionary.ContainsKey(2468))
@@ -286,7 +290,7 @@ namespace Legion.Main
             // Pillar
             else if (e.Path.StartsWith("Metadata/Terrain/Leagues/Legion/Objects/LegionInitiator"))
             {
-                    return new MapIcon(e, new HudTexture(ImagePath + "pillar.png", iconColor), () => Settings.DrawMapIcons, 30);
+                    return new MapIcon(e, new HudTexture(ImagePath + "pillar.png", Color.White), () => Settings.DrawMapIcons, 30);
             }
             return null;
         }
@@ -299,6 +303,7 @@ namespace Legion.Main
             if(Settings.LegionThings)
             foreach (var entity in _entityCollection.Values.ToList())
             {
+                if(Settings.DrawMonolithIcon || Settings.DrawMonolithLine)
                 if (entity.Path.StartsWith("Metadata/Terrain/Leagues/Legion/Objects/LegionInitiator") && entity.IsTargetable)
                 {
                     if (GameController.Game.IngameState.IngameUi.Map.LargeMap.IsVisible)

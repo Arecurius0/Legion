@@ -20,6 +20,8 @@ namespace Legion
         public ToggleNode DrawFancyIcons { get; set; } = true;
         public ToggleNode TextLabels { get; set; } = true;
         public ToggleNode LootTextLabels { get; set; } = true;
+        public ToggleNode DrawMonolithIcon { get; set; } = true;
+        public ToggleNode DrawMonolithLine { get; set; } = true;
         public RangeNode<int> IconSizeWorld { get; set; } = new RangeNode<int>(24, 10, 100);
         public RangeNode<int> LineThickness { get; set; } = new RangeNode<int>(4, 1, 10);
         public RangeNode<int> LineAlpha { get; set; } = new RangeNode<int>(110, 10, 255);
