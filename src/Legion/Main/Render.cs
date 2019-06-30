@@ -142,8 +142,8 @@ namespace Legion.Main
 
                 point.Y = point.Y + 3;
                 var text = Graphics.DrawText(textOut, Settings.TextSize, new Vector2(point.X, point.Y + size / 2f), iconColor, FontDrawFlags.Center | FontDrawFlags.Top);
-                Graphics.DrawBox(new RectangleF((point.X - text.Width / 2f) - 2, (point.Y + size / 2f) - 1, text.Width + 4, text.Height + 2), new Color(0, 0, 0, 220));
-                Graphics.DrawFrame(new RectangleF((point.X - text.Width / 2f) - 2, (point.Y + size / 2f) - 1, text.Width + 4, text.Height + 2), 1, iconColor);
+                Graphics.DrawBox(new RectangleF((point.X - text.Width / 2f) - 3, (point.Y + size / 2f) - 1, text.Width + 5, text.Height + 2), new Color(0, 0, 0, 220));
+                Graphics.DrawFrame(new RectangleF((point.X - text.Width / 2f) - 3, (point.Y + size / 2f) - 1, text.Width + 5, text.Height + 2), 1, iconColor);
             }
         }
 
@@ -204,8 +204,8 @@ namespace Legion.Main
                         if (textOut.Contains("{")) textOut = textOut.Split('{', '}')[1];
                     point.Y = point.Y + 3;
                     var text = Graphics.DrawText(textOut, Settings.TextSize, new Vector2(point.X, point.Y + size / 2f), iconColor, FontDrawFlags.Center | FontDrawFlags.Top);
-                    Graphics.DrawBox(new RectangleF((point.X - text.Width / 2f) - 2, (point.Y + size / 2f) - 1, text.Width + 4, text.Height + 2), new Color(0, 0, 0, 220));
-                    Graphics.DrawFrame(new RectangleF((point.X - text.Width / 2f) - 2, (point.Y + size / 2f) - 1, text.Width + 4, text.Height + 2), 1, iconColor);
+                    Graphics.DrawBox(new RectangleF((point.X - text.Width / 2f) - 3, (point.Y + size / 2f) - 1, text.Width + 5, text.Height + 2), new Color(0, 0, 0, 220));
+                    Graphics.DrawFrame(new RectangleF((point.X - text.Width / 2f) - 3, (point.Y + size / 2f) - 1, text.Width + 5, text.Height + 2), 1, iconColor);
                 }
             }
             DrawImageEntity(entity, icon);
@@ -228,11 +228,15 @@ namespace Legion.Main
 
             var stats = entity.GetComponent<Stats>();
 
+            
             if (Settings.DrawChestsLines && varPath.Contains("chest") || Settings.DrawChestsLines && varPath.Contains("general") || Settings.DrawMobLines && stats.StatDictionary.ContainsKey(2468))
                 Graphics.DrawLine(playerPosition, screenPosition, Settings.LineThickness, new Color((int)iconColor.R, (int)iconColor.G, (int)iconColor.B, Settings.LineAlpha));
             if (Settings.DrawWorldIcons)
-            if (Settings.DrawChests && varPath.Contains("chest") || Settings.DrawMobs && varPath.Contains("general") || Settings.DrawMobs && stats.StatDictionary.ContainsKey(2468))
-                texture.DrawPluginImage(Graphics, new RectangleF((screenPosition.X - Settings.IconSizeWorld), screenPosition.Y - Settings.IconSizeWorld, Settings.IconSizeWorld * 2, Settings.IconSizeWorld * 2));
+                if (Settings.DrawChests && varPath.Contains("chest") || Settings.DrawMobs && varPath.Contains("general") || Settings.DrawMobs && stats.StatDictionary.ContainsKey(2468))
+                {
+                    float worldIconSize = icon.Size * Settings.IconSizeWorld / 10;
+                    texture.DrawPluginImage(Graphics, new RectangleF((screenPosition.X - worldIconSize/2), screenPosition.Y - worldIconSize/2, worldIconSize, worldIconSize));
+                }
         }
 
         private MapIcon GetMapIcon(EntityWrapper e)
