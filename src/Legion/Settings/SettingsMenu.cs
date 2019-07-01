@@ -29,6 +29,9 @@ namespace Legion.Main
             Settings.TextLabels.Value = ImGuiExtension.Checkbox(Settings.TextLabels.Value ? "Use Loot as Text Label" : "Use Loot as Text Label", Settings.TextLabels);
             idPop++;
             ImGui.PopID();
+            Settings.TextLabelsOnly.Value = ImGuiExtension.Checkbox(Settings.TextLabelsOnly.Value ? "Text Labels Only" : "Text Labels Only", Settings.TextLabelsOnly);
+            idPop++;
+            ImGui.PopID();
             Settings.DrawWorldIcons.Value = ImGuiExtension.Checkbox(Settings.DrawWorldIcons.Value ? "Draw Icons in World" : "Draw Icons in World", Settings.DrawWorldIcons);
             idPop++;
             ImGui.PopID();

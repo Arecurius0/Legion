@@ -127,7 +127,9 @@ namespace Legion.Main
 
             var texture = icon.TextureIcon;
             var size = icon.Size * 1.5f;
-            texture.DrawPluginImage(Graphics, new RectangleF(point.X - size / 2f, point.Y - size / 2f, size, size));
+
+            if (!Settings.TextLabelsOnly)
+                texture.DrawPluginImage(Graphics, new RectangleF(point.X - size / 2f, point.Y - size / 2f, size, size));
 
 
             DrawImageEntity(entity, icon);
@@ -153,7 +155,12 @@ namespace Legion.Main
                 if (varPath.Contains("monsterchest") || varPath.Contains("general")) textOut = entity.GetComponent<Render>().Name;
                 if (textOut.Contains("{")) textOut = textOut.Split('{', '}')[1];
 
-                point.Y = point.Y + 3;
+
+                if (Settings.TextLabelsOnly)
+                    point.Y = point.Y - size/2f;
+                else
+                    point.Y = point.Y + 3;
+
                 var text = Graphics.DrawText(textOut, Settings.TextSize, new Vector2(point.X, point.Y + size / 2f), iconColor, FontDrawFlags.Center | FontDrawFlags.Top);
                 Graphics.DrawBox(new RectangleF((point.X - text.Width / 2f) - 3, (point.Y + size / 2f) - 1, text.Width + 5, text.Height + 2), new Color(0, 0, 0, 220));
                 Graphics.DrawFrame(new RectangleF((point.X - text.Width / 2f) - 3, (point.Y + size / 2f) - 1, text.Width + 5, text.Height + 2), 1, iconColor);
@@ -183,7 +190,8 @@ namespace Legion.Main
             mapRect.Contains(ref rect, out var isContain);
             if (isContain)
             {
-                texture.DrawPluginImage(Graphics, rect);
+                if(!Settings.TextLabelsOnly)
+                    texture.DrawPluginImage(Graphics, rect);
 
                 if (Settings.TextLabels && !entity.Path.StartsWith("Metadata/Terrain/Leagues/Legion/Objects/LegionInitiator"))
                 {
@@ -205,7 +213,11 @@ namespace Legion.Main
                     }
                     if (varPath.Contains("monsterchest") || varPath.Contains("general")) textOut = entity.GetComponent<Render>().Name;
                         if (textOut.Contains("{")) textOut = textOut.Split('{', '}')[1];
-                    point.Y = point.Y + 3;
+
+                    if (Settings.TextLabelsOnly)
+                        point.Y = point.Y - size / 2f;
+                    else
+                        point.Y = point.Y + 3;
                     var text = Graphics.DrawText(textOut, Settings.TextSize, new Vector2(point.X, point.Y + size / 2f), iconColor, FontDrawFlags.Center | FontDrawFlags.Top);
                     Graphics.DrawBox(new RectangleF((point.X - text.Width / 2f) - 3, (point.Y + size / 2f) - 1, text.Width + 5, text.Height + 2), new Color(0, 0, 0, 220));
                     Graphics.DrawFrame(new RectangleF((point.X - text.Width / 2f) - 3, (point.Y + size / 2f) - 1, text.Width + 5, text.Height + 2), 1, iconColor);
@@ -230,8 +242,12 @@ namespace Legion.Main
             var playerPosition = GameController.Game.IngameState.Camera.WorldToScreen(GameController.Player.Pos, playerEntity);
 
             var stats = entity.GetComponent<Stats>();
-
             
+            if (entity.Path.StartsWith("Metadata/Terrain/Leagues/Legion/Objects/LegionInitiator"))
+            {
+                LogMessage(playerPosition + " / " + screenPosition, 0);
+            }
+
             if (Settings.DrawChestsLines && varPath.Contains("chest") || Settings.DrawChestsLines && varPath.Contains("general") 
                 || Settings.DrawMobLines && stats.StatDictionary.ContainsKey(2468) || Settings.DrawMonolithLine && varPath.Contains("legioninitiator"))
                 Graphics.DrawLine(playerPosition, screenPosition, Settings.LineThickness, new Color((int)iconColor.R, (int)iconColor.G, (int)iconColor.B, Settings.LineAlpha));
