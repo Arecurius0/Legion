@@ -143,6 +143,10 @@ namespace Legion.Main
                 {
                     string file = System.IO.Path.GetFileNameWithoutExtension(icon.TextureIcon.FileName.ToString());
                     textOut = file.Remove(1).ToUpper() + file.Substring(1);
+                    if (varPath.Contains("chest") && varPath.Contains("epic"))
+                        textOut += " War Hoard";
+                    else if (varPath.Contains("chest") && !varPath.Contains("epic"))
+                        textOut += " Chest";
                 }
                 else
                 {
@@ -202,6 +206,10 @@ namespace Legion.Main
                     {
                         string file = System.IO.Path.GetFileNameWithoutExtension(icon.TextureIcon.FileName.ToString());
                         textOut = file.Remove(1).ToUpper() + file.Substring(1);
+                        if (varPath.Contains("chest") && varPath.Contains("epic"))
+                            textOut += " War Hoard";
+                        else if (varPath.Contains("chest") && !varPath.Contains("epic"))
+                            textOut += " Chest";
                     }
                     else
                     {
