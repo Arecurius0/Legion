@@ -243,11 +243,6 @@ namespace Legion.Main
 
             var stats = entity.GetComponent<Stats>();
             
-            if (entity.Path.StartsWith("Metadata/Terrain/Leagues/Legion/Objects/LegionInitiator"))
-            {
-                LogMessage(playerPosition + " / " + screenPosition, 0);
-            }
-
             if (Settings.DrawChestsLines && varPath.Contains("chest") || Settings.DrawChestsLines && varPath.Contains("general") 
                 || Settings.DrawMobLines && stats.StatDictionary.ContainsKey(2468) || Settings.DrawMonolithLine && varPath.Contains("legioninitiator"))
                 Graphics.DrawLine(playerPosition, screenPosition, Settings.LineThickness, new Color((int)iconColor.R, (int)iconColor.G, (int)iconColor.B, Settings.LineAlpha));
