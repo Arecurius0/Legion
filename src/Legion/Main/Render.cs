@@ -14,6 +14,7 @@ using System.Linq;
 using PoeHUD.Framework.Helpers;
 using PoeHUD.Hud;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 
 namespace Legion.Main
 {
@@ -69,6 +70,7 @@ namespace Legion.Main
         public override void EntityAdded(EntityWrapper entity) { _entityCollection[entity.Id] = entity; }
         public override void EntityRemoved(EntityWrapper entity) { _entityCollection.TryRemove(entity.Id, out _); }
         private ConcurrentDictionary<long, EntityWrapper> _entityCollection;
+        public Stopwatch EntityCatch = Stopwatch.StartNew();
 
         public class LargeMapData
         {
@@ -317,45 +319,57 @@ namespace Legion.Main
         public override void Render()
         {
 #if !DEBUG
-            try { 
+            try {
 #endif
-            if(Settings.LegionThings)
-            foreach (var entity in _entityCollection.Values.ToList())
-            {
-                if(Settings.DrawMonolithIcon || Settings.DrawMonolithLine)
-                if (entity.Path.StartsWith("Metadata/Terrain/Leagues/Legion/Objects/LegionInitiator") && entity.IsTargetable)
+                if (Settings.LegionThings)
                 {
-                    if (GameController.Game.IngameState.IngameUi.Map.LargeMap.IsVisible)
+
+                    // catch entities that are missing for whatever reason
+                    if (EntityCatch.ElapsedMilliseconds > 1500)
                     {
-                        LargeMapInformation = new LargeMapData(GameController);
-                        if (entity is null) continue;
-                        DrawToLargeMiniMap(entity);
-                    }
-                    else if (GameController.Game.IngameState.IngameUi.Map.SmallMinimap.IsVisible)
-                    {
-                        if (entity is null) continue;
-                        DrawToSmallMiniMap(entity);
-                    }
-                }
-                if (entity is null || !entity.IsLegion || !entity.IsFrozenInTime && !entity.IsActive) continue;
-                if (entity.IsAlive && entity.HasComponent<Monster>() || entity.HasComponent<Chest>() && !entity.GetComponent<Chest>().IsOpened)
-                {
-                    if (!entity.HasComponent<Chest>() || entity.IsActive && !entity.IsFrozenInTime)
-                    { 
-                        if (GameController.Game.IngameState.IngameUi.Map.LargeMap.IsVisible)
+                        foreach (var entity in GameController.Entities.ToList().Where(x => !_entityCollection.Keys.Contains(x.Id)))
                         {
-                            LargeMapInformation = new LargeMapData(GameController);
-                            if (entity is null) continue;
-                            DrawToLargeMiniMap(entity);
-                        }
-                        else if (GameController.Game.IngameState.IngameUi.Map.SmallMinimap.IsVisible)
-                        {
-                            if (entity is null) continue;
-                            DrawToSmallMiniMap(entity);
+                            _entityCollection[entity.Id] = entity;
                         }
                     }
+
+                    foreach (var entity in _entityCollection.Values.ToList())
+                    {
+                        if (Settings.DrawMonolithIcon || Settings.DrawMonolithLine)
+                            if (entity.Path.StartsWith("Metadata/Terrain/Leagues/Legion/Objects/LegionInitiator") && entity.IsTargetable)
+                            {
+                                if (GameController.Game.IngameState.IngameUi.Map.LargeMap.IsVisible)
+                                {
+                                    LargeMapInformation = new LargeMapData(GameController);
+                                    if (entity is null) continue;
+                                    DrawToLargeMiniMap(entity);
+                                }
+                                else if (GameController.Game.IngameState.IngameUi.Map.SmallMinimap.IsVisible)
+                                {
+                                    if (entity is null) continue;
+                                    DrawToSmallMiniMap(entity);
+                                }
+                            }
+                        if (entity is null || !entity.IsLegion || !entity.IsFrozenInTime && !entity.IsActive) continue;
+                        if (entity.IsAlive && entity.HasComponent<Monster>() || entity.HasComponent<Chest>() && !entity.GetComponent<Chest>().IsOpened)
+                        {
+                            if (!entity.HasComponent<Chest>() || entity.IsActive && !entity.IsFrozenInTime)
+                            {
+                                if (GameController.Game.IngameState.IngameUi.Map.LargeMap.IsVisible)
+                                {
+                                    LargeMapInformation = new LargeMapData(GameController);
+                                    if (entity is null) continue;
+                                    DrawToLargeMiniMap(entity);
+                                }
+                                else if (GameController.Game.IngameState.IngameUi.Map.SmallMinimap.IsVisible)
+                                {
+                                    if (entity is null) continue;
+                                    DrawToSmallMiniMap(entity);
+                                }
+                            }
+                        }
+                    }
                 }
-            }
 #if !DEBUG
             }
             catch
