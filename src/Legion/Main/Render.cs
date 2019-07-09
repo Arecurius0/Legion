@@ -182,9 +182,18 @@ namespace Legion.Main
                 else
                     point.Y = point.Y + 3;
 
-                var text = Graphics.DrawText(textOut, Settings.TextSize, new Vector2(point.X, point.Y + size / 2f), iconColor, FontDrawFlags.Center | FontDrawFlags.Top);
-                Graphics.DrawBox(new RectangleF((point.X - text.Width / 2f) - 3, (point.Y + size / 2f) - 1, text.Width + 5, text.Height + 2), new Color(0, 0, 0, 220));
-                Graphics.DrawFrame(new RectangleF((point.X - text.Width / 2f) - 3, (point.Y + size / 2f) - 1, text.Width + 5, text.Height + 2), 1, iconColor);
+                point.Y += (size / 2f) - Settings.TextYAdjust;
+                var textSize = Graphics.MeasureText(WordWrap(textOut, Settings.TextWrap), Settings.TextSize, FontDrawFlags.Center | FontDrawFlags.Top);
+                Graphics.DrawText(WordWrap(textOut, Settings.TextWrap), Settings.TextSize, point, iconColor, FontDrawFlags.Center | FontDrawFlags.Top);
+                float maxWidth = 0;
+                float maxheight = 0;
+                point.Y += textSize.Height;
+                maxheight += textSize.Height;
+                maxWidth = Math.Max(maxWidth, textSize.Width);
+                var background = new RectangleF(point.X - maxWidth / 2 - 3, point.Y - maxheight, maxWidth + 6, maxheight);
+                Graphics.DrawBox(background, new Color(0, 0, 0, 220));
+                Graphics.DrawFrame(background, 1, iconColor);
+
             }
         }
 
@@ -239,13 +248,25 @@ namespace Legion.Main
                     if (varPath.Contains("monsterchest") || varPath.Contains("general")) textOut = entity.GetComponent<Render>().Name;
                         if (textOut.Contains("{")) textOut = textOut.Split('{', '}')[1];
 
+
                     if (Settings.TextLabelsOnly)
                         point.Y = point.Y - size / 2f;
                     else
                         point.Y = point.Y + 3;
-                    var text = Graphics.DrawText(textOut, Settings.TextSize, new Vector2(point.X, point.Y + size / 2f), iconColor, FontDrawFlags.Center | FontDrawFlags.Top);
-                    Graphics.DrawBox(new RectangleF((point.X - text.Width / 2f) - 3, (point.Y + size / 2f) - 1, text.Width + 5, text.Height + 2), new Color(0, 0, 0, 220));
-                    Graphics.DrawFrame(new RectangleF((point.X - text.Width / 2f) - 3, (point.Y + size / 2f) - 1, text.Width + 5, text.Height + 2), 1, iconColor);
+
+                    point.Y += (size / 2f) - Settings.TextYAdjust;
+                    var textSize = Graphics.MeasureText(WordWrap(textOut, Settings.TextWrap), Settings.TextSize, FontDrawFlags.Center | FontDrawFlags.Top);
+                    Graphics.DrawText(WordWrap(textOut, Settings.TextWrap), Settings.TextSize, point, iconColor, FontDrawFlags.Center | FontDrawFlags.Top);
+                    float maxWidth = 0;
+                    float maxheight = 0;
+                    point.Y += textSize.Height;
+                    maxheight += textSize.Height;
+                    maxWidth = Math.Max(maxWidth, textSize.Width);
+                    var background = new RectangleF(point.X - maxWidth / 2 - 3, point.Y - maxheight, maxWidth + 6, maxheight);
+                    Graphics.DrawBox(background, new Color(0, 0, 0, 220));
+                    Graphics.DrawFrame(background, 1, iconColor);
+
+
                 }
             }
             DrawImageEntity(entity, icon);

@@ -32,6 +32,8 @@ namespace Legion
         public RangeNode<int> IconSizeHoard { get; set; } = new RangeNode<int>(28, 10, 100);
         public RangeNode<int> IconSizeGeneric { get; set; } = new RangeNode<int>(10, 5, 25);
         public RangeNode<int> TextSize { get; set; } = new RangeNode<int>(10, 5, 25);
+        public RangeNode<int> TextWrap { get; set; } = new RangeNode<int>(15, 10, 30);
+        public RangeNode<int> TextYAdjust{ get; set; } = new RangeNode<int>(10, -40, 40);
         public ColorNode KaruiColor { get; set; } = new SharpDX.Color(255, 140, 0, 255);
         public ColorNode EternalColor { get; set; } = new SharpDX.Color(220, 220, 220, 255);
         public ColorNode TemplarColor { get; set; } = new SharpDX.Color(16, 208, 0, 255);
