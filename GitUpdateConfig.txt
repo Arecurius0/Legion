@@ -1,0 +1,13 @@
+Owner: Lachrymatory
+Name: Legion
+Repository
+
+Ignore:
+src
+.gitignore
+.gitattributes
+README.md
+LICENSE
+config.ini
+.config
+.pdb

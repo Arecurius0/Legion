@@ -14,6 +14,7 @@ using System.Linq;
 using PoeHUD.Framework.Helpers;
 using PoeHUD.Hud;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 
 namespace Legion.Main
 {
@@ -66,9 +67,25 @@ namespace Legion.Main
             _entityCollection.Clear();
         }
 
-        public override void EntityAdded(EntityWrapper entity) { _entityCollection[entity.Id] = entity; }
-        public override void EntityRemoved(EntityWrapper entity) { _entityCollection.TryRemove(entity.Id, out _); }
+        public override void EntityAdded(EntityWrapper entity)
+        {
+            // avoid adding 8000 mobs for no raisin
+            if(entity.Path.StartsWith("Metadata/Monsters/LegionLeague/MonsterChest")
+            || entity.Path.StartsWith("Metadata/Monsters/LegionLeague/LegionKaruiGeneralFish")
+            || entity.Path.StartsWith("Metadata/Monsters/LegionLeague/LegionMarakethGeneral")
+            || entity.Path.StartsWith("Metadata/Monsters/LegionLeague/LegionEternalEmpireGeneral")
+            || entity.Path.StartsWith("Metadata/Monsters/LegionLeague/LegionVaalGeneral")
+            || entity.Path.StartsWith("Metadata/Monsters/LegionLeague/LegionTemplarGeneral")
+            || entity.Path.StartsWith("Metadata/Terrain/Leagues/Legion/Objects/LegionInitiator")
+            || entity.GetComponent<Stats>().StatDictionary.ContainsKey(2468))
+                _entityCollection[entity.Id] = entity;
+        }
+        public override void EntityRemoved(EntityWrapper entity)
+        {
+            _entityCollection.TryRemove(entity.Id, out _);
+        }
         private ConcurrentDictionary<long, EntityWrapper> _entityCollection;
+        public Stopwatch EntityCatch = Stopwatch.StartNew();
 
         public class LargeMapData
         {
@@ -98,6 +115,18 @@ namespace Legion.Main
             }
         }
 
+
+        private Color GetColorForPath(string varPath)
+        {
+            if (varPath.Contains("karui")) return Settings.KaruiColor;
+            else if (varPath.Contains("eternal")) return Settings.EternalColor;
+            else if (varPath.Contains("templar")) return Settings.TemplarColor;
+            else if (varPath.Contains("vaal")) return Settings.VaalColor;
+            else if (varPath.Contains("maraketh")) return Settings.MarakethColor;
+            else if (varPath.Contains("legioninitiator")) return new Color(80, 30, 220);
+            else return Color.White;
+        }
+
         private void DrawToLargeMiniMap(EntityWrapper entity)
         {
             var icon = GetMapIcon(entity);
@@ -115,42 +144,57 @@ namespace Legion.Main
 
             var texture = icon.TextureIcon;
             var size = icon.Size * 1.5f;
-            texture.DrawPluginImage(Graphics, new RectangleF(point.X - size / 2f, point.Y - size / 2f, size, size));
-            
+
+            if (!Settings.TextLabelsOnly)
+                texture.DrawPluginImage(Graphics, new RectangleF(point.X - size / 2f, point.Y - size / 2f, size, size));
+
+
             DrawImageEntity(entity, icon);
-            if (Settings.TextLabels)
+
+            if (Settings.TextLabels && !entity.Path.StartsWith("Metadata/Terrain/Leagues/Legion/Objects/LegionInitiator"))
             {
                 var varPath = entity.Path.ToLower();
                 var iconColor = GetColorForPath(varPath);
                 string textOut = "";
-                if (varPath.Contains("karui")) textOut = "Karui";
-                else if (varPath.Contains("eternal")) textOut = "Eternal";
-                else if (varPath.Contains("templar")) textOut = "Templar";
-                else if (varPath.Contains("vaal")) textOut = "Vaal";
-                else if (varPath.Contains("maraketh")) textOut = "Maraketh";
-                if (varPath.Contains("chest") || varPath.Contains("general")) textOut = entity.GetComponent<Render>().Name;
+                if (Settings.LootTextLabels)
+                {
+                    string file = System.IO.Path.GetFileNameWithoutExtension(icon.TextureIcon.FileName.ToString());
+                    textOut = file.Remove(1).ToUpper() + file.Substring(1);
+                    if (varPath.Contains("chest") && varPath.Contains("epic"))
+                        textOut += " War Hoard";
+                    else if (varPath.Contains("chest") && !varPath.Contains("epic"))
+                        textOut += " Chest";
+                }
+                else
+                {
+                    if (varPath.Contains("karui")) textOut = "Karui";
+                    else if (varPath.Contains("eternal")) textOut = "Eternal";
+                    else if (varPath.Contains("templar")) textOut = "Templar";
+                    else if (varPath.Contains("vaal")) textOut = "Vaal";
+                    else if (varPath.Contains("maraketh")) textOut = "Maraketh";
+                }
+                if (varPath.Contains("monsterchest") || varPath.Contains("general")) textOut = entity.GetComponent<Render>().Name;
                 if (textOut.Contains("{")) textOut = textOut.Split('{', '}')[1];
 
-                point.Y = point.Y + 3;
-                var text = Graphics.DrawText(textOut, 10, new Vector2(point.X, point.Y + size / 2f), iconColor, FontDrawFlags.Center | FontDrawFlags.VerticalCenter);
-                Graphics.DrawBox(new RectangleF((point.X - 3) - text.Width / 2f, point.Y + text.Height + 4, text.Width + 4, text.Height + 2), new Color(0, 0, 0, 220));
-                Graphics.DrawFrame(new RectangleF((point.X - 3) - text.Width / 2f, point.Y + text.Height + 4, text.Width + 4, text.Height + 2), 1, iconColor);
-            }
-        }
 
-        private Color GetColorForPath(string varPath)
-        {
-            if (varPath.Contains("karui"))
-                return new Color(255, 140, 0, 255);
-            else if (varPath.Contains("eternal"))
-                return new Color(220, 220, 220, 255);
-            else if (varPath.Contains("templar"))
-                return new Color(16, 208, 0, 255);
-            else if (varPath.Contains("vaal"))
-                return new Color(220, 0, 70, 255);
-            else if (varPath.Contains("maraketh"))
-                return new Color(255, 255, 0, 255);
-            else return Color.White;
+                if (Settings.TextLabelsOnly)
+                    point.Y = point.Y - size/2f;
+                else
+                    point.Y = point.Y + 3;
+
+                point.Y += (size / 2f) - Settings.TextYAdjust;
+                var textSize = Graphics.MeasureText(WordWrap(textOut, Settings.TextWrap), Settings.TextSize, FontDrawFlags.Center | FontDrawFlags.Top);
+                Graphics.DrawText(WordWrap(textOut, Settings.TextWrap), Settings.TextSize, point, iconColor, FontDrawFlags.Center | FontDrawFlags.Top);
+                float maxWidth = 0;
+                float maxheight = 0;
+                point.Y += textSize.Height;
+                maxheight += textSize.Height;
+                maxWidth = Math.Max(maxWidth, textSize.Width);
+                var background = new RectangleF(point.X - maxWidth / 2 - 3, point.Y - maxheight, maxWidth + 6, maxheight);
+                Graphics.DrawBox(background, new Color(0, 0, 0, 220));
+                Graphics.DrawFrame(background, 1, iconColor);
+
+            }
         }
 
         private void DrawToSmallMiniMap(EntityWrapper entity)
@@ -176,25 +220,53 @@ namespace Legion.Main
             mapRect.Contains(ref rect, out var isContain);
             if (isContain)
             {
-                texture.DrawPluginImage(Graphics, rect);
+                if(!Settings.TextLabelsOnly)
+                    texture.DrawPluginImage(Graphics, rect);
 
-                if (Settings.TextLabels)
+                if (Settings.TextLabels && !entity.Path.StartsWith("Metadata/Terrain/Leagues/Legion/Objects/LegionInitiator"))
                 {
                     var varPath = entity.Path.ToLower();
                     var iconColor = GetColorForPath(varPath);
                     string textOut = "";
-                    if (varPath.Contains("karui")) textOut = "Karui";
-                    else if (varPath.Contains("eternal")) textOut = "Eternal";
-                    else if (varPath.Contains("templar")) textOut = "Templar";
-                    else if (varPath.Contains("vaal")) textOut = "Vaal";
-                    else if (varPath.Contains("maraketh")) textOut = "Maraketh";
-                    if (varPath.Contains("chest") || varPath.Contains("general")) textOut = entity.GetComponent<Render>().Name;
-                    if (textOut.Contains("{")) textOut = textOut.Split('{', '}')[1];
+                    if (Settings.LootTextLabels)
+                    {
+                        string file = System.IO.Path.GetFileNameWithoutExtension(icon.TextureIcon.FileName.ToString());
+                        textOut = file.Remove(1).ToUpper() + file.Substring(1);
+                        if (varPath.Contains("chest") && varPath.Contains("epic"))
+                            textOut += " War Hoard";
+                        else if (varPath.Contains("chest") && !varPath.Contains("epic"))
+                            textOut += " Chest";
+                    }
+                    else
+                    {
+                        if (varPath.Contains("karui")) textOut = "Karui";
+                        else if (varPath.Contains("eternal")) textOut = "Eternal";
+                        else if (varPath.Contains("templar")) textOut = "Templar";
+                        else if (varPath.Contains("vaal")) textOut = "Vaal";
+                        else if (varPath.Contains("maraketh")) textOut = "Maraketh";
+                    }
+                    if (varPath.Contains("monsterchest") || varPath.Contains("general")) textOut = entity.GetComponent<Render>().Name;
+                        if (textOut.Contains("{")) textOut = textOut.Split('{', '}')[1];
 
-                    point.Y = point.Y + 3;
-                    var text = Graphics.DrawText(textOut, 10, new Vector2(point.X, point.Y + size / 2f), iconColor, FontDrawFlags.Center | FontDrawFlags.VerticalCenter);
-                    Graphics.DrawBox(new RectangleF((point.X - 3) - text.Width / 2f, (point.Y - 2) + text.Height, text.Width + 4, text.Height + 2), new Color(0, 0, 0, 200));
-                    Graphics.DrawFrame(new RectangleF((point.X - 3) - text.Width / 2f, (point.Y - 2) + text.Height, text.Width + 4, text.Height + 2), 1, iconColor);
+
+                    if (Settings.TextLabelsOnly)
+                        point.Y = point.Y - size / 2f;
+                    else
+                        point.Y = point.Y + 3;
+
+                    point.Y += (size / 2f) - Settings.TextYAdjust;
+                    var textSize = Graphics.MeasureText(WordWrap(textOut, Settings.TextWrap), Settings.TextSize, FontDrawFlags.Center | FontDrawFlags.Top);
+                    Graphics.DrawText(WordWrap(textOut, Settings.TextWrap), Settings.TextSize, point, iconColor, FontDrawFlags.Center | FontDrawFlags.Top);
+                    float maxWidth = 0;
+                    float maxheight = 0;
+                    point.Y += textSize.Height;
+                    maxheight += textSize.Height;
+                    maxWidth = Math.Max(maxWidth, textSize.Width);
+                    var background = new RectangleF(point.X - maxWidth / 2 - 3, point.Y - maxheight, maxWidth + 6, maxheight);
+                    Graphics.DrawBox(background, new Color(0, 0, 0, 220));
+                    Graphics.DrawFrame(background, 1, iconColor);
+
+
                 }
             }
             DrawImageEntity(entity, icon);
@@ -216,12 +288,16 @@ namespace Legion.Main
             var playerPosition = GameController.Game.IngameState.Camera.WorldToScreen(GameController.Player.Pos, playerEntity);
 
             var stats = entity.GetComponent<Stats>();
-
-            if (Settings.DrawChestsLines && varPath.Contains("chest") || Settings.DrawChestsLines && varPath.Contains("general") || stats.StatDictionary.ContainsKey(2468) && Settings.DrawMobLines)
+            
+            if (Settings.DrawChestsLines && varPath.Contains("chest") || Settings.DrawChestsLines && varPath.Contains("general") 
+                || Settings.DrawMobLines && stats.StatDictionary.ContainsKey(2468) || Settings.DrawMonolithLine && varPath.Contains("legioninitiator"))
                 Graphics.DrawLine(playerPosition, screenPosition, Settings.LineThickness, new Color((int)iconColor.R, (int)iconColor.G, (int)iconColor.B, Settings.LineAlpha));
             if (Settings.DrawWorldIcons)
-            if (Settings.DrawChests && varPath.Contains("chest") || Settings.DrawMobs && varPath.Contains("general") || stats.StatDictionary.ContainsKey(2468) && Settings.DrawMobs)
-                texture.DrawPluginImage(Graphics, new RectangleF((screenPosition.X - Settings.IconSizeWorld), screenPosition.Y - Settings.IconSizeWorld, Settings.IconSizeWorld * 2, Settings.IconSizeWorld * 2));
+                if (Settings.DrawChests && varPath.Contains("chest") || Settings.DrawMobs && varPath.Contains("general") || Settings.DrawMobs && stats.StatDictionary.ContainsKey(2468))
+                {
+                    float worldIconSize = icon.Size * Settings.IconSizeWorld / 10;
+                    texture.DrawPluginImage(Graphics, new RectangleF((screenPosition.X - worldIconSize/2), screenPosition.Y - worldIconSize/2, worldIconSize, worldIconSize));
+                }
         }
 
         private MapIcon GetMapIcon(EntityWrapper e)
@@ -231,7 +307,7 @@ namespace Legion.Main
             var iconColor = GetColorForPath(varPath);
 
             // Normal mobs and chests
-            if (!e.Path.StartsWith("Metadata/Monsters/LegionLeague/MonsterChest") && !e.Path.Contains("General") || e.HasComponent<Chest>())
+            if (!e.Path.StartsWith("Metadata/Monsters/LegionLeague/MonsterChest") && !e.Path.Contains("General") && !e.Path.Contains("LegionInitiator") || e.HasComponent<Chest>())
             {
                 if (stats.StatDictionary.TryGetValue(2468, out int minimapIcon))
                 {
@@ -260,13 +336,18 @@ namespace Legion.Main
                 || e.Path.StartsWith("Metadata/Monsters/LegionLeague/MonsterChestKarui2"))
             {
                 if (Settings.DrawChests)
-                    return new MapIcon(e, new HudTexture(ImagePath + "Chest_Large.png", iconColor), () => Settings.DrawMapIcons, Settings.IconSizeGeneral);
+                    return new MapIcon(e, new HudTexture(ImagePath + "Chest_Large.png", iconColor), () => Settings.DrawMapIcons, Settings.IconSizeHoard);
             }
             // Normal Chests
             else if (e.Path.StartsWith("Metadata/Monsters/LegionLeague/MonsterChest"))
             {
-                if(Settings.DrawChests)
-                return new MapIcon(e, new HudTexture(ImagePath + "Chest_Small.png", iconColor), () => Settings.DrawMapIcons, Settings.IconSizeGeneral);
+                if (Settings.DrawChests)
+                    return new MapIcon(e, new HudTexture(ImagePath + "Chest_Small.png", iconColor), () => Settings.DrawMapIcons, Settings.IconSizeChest);
+            }
+            // Pillar
+            else if (e.Path.StartsWith("Metadata/Terrain/Leagues/Legion/Objects/LegionInitiator"))
+            {
+                    return new MapIcon(e, new HudTexture(ImagePath + "pillar.png", Color.White), () => Settings.DrawMapIcons, 30);
             }
             return null;
         }
@@ -274,30 +355,67 @@ namespace Legion.Main
         public override void Render()
         {
 #if !DEBUG
-            try { 
+            try {
 #endif
-            if(Settings.LegionThings)
-            foreach (var entity in _entityCollection.Values.ToList())
-            {
-                if (entity is null || !entity.IsLegion || !entity.IsFrozenInTime && !entity.IsActive) continue;
-                if (entity.IsAlive && entity.HasComponent<Monster>() || entity.HasComponent<Chest>() && !entity.GetComponent<Chest>().IsOpened)
+                if (Settings.LegionThings)
                 {
-                    if (!entity.HasComponent<Chest>() || entity.IsActive && !entity.IsFrozenInTime)
-                    { 
-                        if (GameController.Game.IngameState.IngameUi.Map.LargeMap.IsVisible)
+
+                    // catch entities that are missing for whatever reason
+                    if (EntityCatch.ElapsedMilliseconds > 2500)
+                    {
+                        foreach (var entity in GameController.Entities.ToList().Where(x => !_entityCollection.Keys.Contains(x.Id)))
                         {
-                            LargeMapInformation = new LargeMapData(GameController);
-                            if (entity is null) continue;
-                            DrawToLargeMiniMap(entity);
+                            if (entity is null || !entity.IsLegion && !entity.Path.StartsWith("Metadata/Terrain/Leagues/Legion/Objects/LegionInitiator")) continue;
+                            if (entity.Path.StartsWith("Metadata/Monsters/LegionLeague/MonsterChest")
+                            || entity.Path.StartsWith("Metadata/Monsters/LegionLeague/LegionKaruiGeneralFish")
+                            || entity.Path.StartsWith("Metadata/Monsters/LegionLeague/LegionMarakethGeneral")
+                            || entity.Path.StartsWith("Metadata/Monsters/LegionLeague/LegionEternalEmpireGeneral")
+                            || entity.Path.StartsWith("Metadata/Monsters/LegionLeague/LegionVaalGeneral")
+                            || entity.Path.StartsWith("Metadata/Monsters/LegionLeague/LegionTemplarGeneral")
+                            || entity.Path.StartsWith("Metadata/Terrain/Leagues/Legion/Objects/LegionInitiator")
+                            || entity.GetComponent<Stats>().StatDictionary.ContainsKey(2468))
+                                    _entityCollection[entity.Id] = entity;
                         }
-                        else if (GameController.Game.IngameState.IngameUi.Map.SmallMinimap.IsVisible)
+                        EntityCatch.Restart();
+                    }
+
+                    foreach (var entity in _entityCollection.Values.ToList())
+                    {
+                        if (Settings.DrawMonolithIcon || Settings.DrawMonolithLine)
+                            if (entity.Path.StartsWith("Metadata/Terrain/Leagues/Legion/Objects/LegionInitiator") && entity.IsTargetable)
+                            {
+                                if (GameController.Game.IngameState.IngameUi.Map.LargeMap.IsVisible)
+                                {
+                                    LargeMapInformation = new LargeMapData(GameController);
+                                    if (entity is null) continue;
+                                    DrawToLargeMiniMap(entity);
+                                }
+                                else if (GameController.Game.IngameState.IngameUi.Map.SmallMinimap.IsVisible)
+                                {
+                                    if (entity is null) continue;
+                                    DrawToSmallMiniMap(entity);
+                                }
+                            }
+                        if (entity is null || !entity.IsLegion || !entity.IsFrozenInTime && !entity.IsActive) continue;
+                        if (entity.IsAlive && entity.HasComponent<Monster>() || entity.HasComponent<Chest>() && !entity.GetComponent<Chest>().IsOpened)
                         {
-                            if (entity is null) continue;
-                            DrawToSmallMiniMap(entity);
+                            if (!entity.HasComponent<Chest>() || entity.IsActive && !entity.IsFrozenInTime)
+                            {
+                                if (GameController.Game.IngameState.IngameUi.Map.LargeMap.IsVisible)
+                                {
+                                    LargeMapInformation = new LargeMapData(GameController);
+                                    if (entity is null) continue;
+                                    DrawToLargeMiniMap(entity);
+                                }
+                                else if (GameController.Game.IngameState.IngameUi.Map.SmallMinimap.IsVisible)
+                                {
+                                    if (entity is null) continue;
+                                    DrawToSmallMiniMap(entity);
+                                }
+                            }
                         }
                     }
                 }
-            }
 #if !DEBUG
             }
             catch
