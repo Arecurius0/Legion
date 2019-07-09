@@ -67,8 +67,23 @@ namespace Legion.Main
             _entityCollection.Clear();
         }
 
-        public override void EntityAdded(EntityWrapper entity) { _entityCollection[entity.Id] = entity; }
-        public override void EntityRemoved(EntityWrapper entity) { _entityCollection.TryRemove(entity.Id, out _); }
+        public override void EntityAdded(EntityWrapper entity)
+        {
+            // avoid adding 8000 mobs for no raisin
+            if(entity.Path.StartsWith("Metadata/Monsters/LegionLeague/MonsterChest")
+            || entity.Path.StartsWith("Metadata/Monsters/LegionLeague/LegionKaruiGeneralFish")
+            || entity.Path.StartsWith("Metadata/Monsters/LegionLeague/LegionMarakethGeneral")
+            || entity.Path.StartsWith("Metadata/Monsters/LegionLeague/LegionEternalEmpireGeneral")
+            || entity.Path.StartsWith("Metadata/Monsters/LegionLeague/LegionVaalGeneral")
+            || entity.Path.StartsWith("Metadata/Monsters/LegionLeague/LegionTemplarGeneral")
+            || entity.Path.StartsWith("Metadata/Terrain/Leagues/Legion/Objects/LegionInitiator")
+            || entity.GetComponent<Stats>().StatDictionary.ContainsKey(2468))
+                _entityCollection[entity.Id] = entity;
+        }
+        public override void EntityRemoved(EntityWrapper entity)
+        {
+            _entityCollection.TryRemove(entity.Id, out _);
+        }
         private ConcurrentDictionary<long, EntityWrapper> _entityCollection;
         public Stopwatch EntityCatch = Stopwatch.StartNew();
 
@@ -325,12 +340,22 @@ namespace Legion.Main
                 {
 
                     // catch entities that are missing for whatever reason
-                    if (EntityCatch.ElapsedMilliseconds > 1500)
+                    if (EntityCatch.ElapsedMilliseconds > 2500)
                     {
                         foreach (var entity in GameController.Entities.ToList().Where(x => !_entityCollection.Keys.Contains(x.Id)))
                         {
-                            _entityCollection[entity.Id] = entity;
+                            if (entity is null || !entity.IsLegion && !entity.Path.StartsWith("Metadata/Terrain/Leagues/Legion/Objects/LegionInitiator")) continue;
+                            if (entity.Path.StartsWith("Metadata/Monsters/LegionLeague/MonsterChest")
+                            || entity.Path.StartsWith("Metadata/Monsters/LegionLeague/LegionKaruiGeneralFish")
+                            || entity.Path.StartsWith("Metadata/Monsters/LegionLeague/LegionMarakethGeneral")
+                            || entity.Path.StartsWith("Metadata/Monsters/LegionLeague/LegionEternalEmpireGeneral")
+                            || entity.Path.StartsWith("Metadata/Monsters/LegionLeague/LegionVaalGeneral")
+                            || entity.Path.StartsWith("Metadata/Monsters/LegionLeague/LegionTemplarGeneral")
+                            || entity.Path.StartsWith("Metadata/Terrain/Leagues/Legion/Objects/LegionInitiator")
+                            || entity.GetComponent<Stats>().StatDictionary.ContainsKey(2468))
+                                    _entityCollection[entity.Id] = entity;
                         }
+                        EntityCatch.Restart();
                     }
 
                     foreach (var entity in _entityCollection.Values.ToList())
